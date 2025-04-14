@@ -1,3 +1,4 @@
+// PartyName.cpp
 #include "PartyName.h"
 #include "Candidate.h"
 

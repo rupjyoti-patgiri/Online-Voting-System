@@ -1,10 +1,11 @@
+// Election.cpp
 #include "Election.h"
 #include <iostream>
 #include <limits>
 #include <unordered_map>
 using namespace std;
 
-Election::Election(string type, string date)
+Election::Election(string type, string date, int pollId) : pollID(pollId)
 {
     this->electionType = type;
     this->date = date;
@@ -23,9 +24,19 @@ void Election::conductElection(vector<Voter *> &voters)
         voterMap[v->getVoterID()] = v;
     }
 
+    int currentPollID;
+    cout << "Enter Poll ID to proceed with voting: ";
+    cin >> currentPollID;
+
+    if (currentPollID != pollID)
+    {
+        cout << "Incorrect Poll ID. Voting cannot proceed.\n";
+        return;
+    }
+
     while (true)
     {
-        string id;
+        string id, pin; // Added pin
         cout << "\nEnter Voter ID to vote (or type 'exit' to end voting): ";
         cin >> id;
 
@@ -39,6 +50,16 @@ void Election::conductElection(vector<Voter *> &voters)
         }
 
         Voter *voter = voterMap[id];
+
+        cout << "Enter your Private PIN: "; // Added pin prompt
+        cin >> pin;
+
+        if (pin != voter->getPrivatePin()) // Verify pin
+        {
+            cout << "Incorrect PIN.\n";
+            continue;
+        }
+
         if (!voter->isEligible())
         {
             cout << "You are not eligible to vote.\n";
@@ -65,6 +86,7 @@ void Election::conductElection(vector<Voter *> &voters)
         {
             candidates[choice - 1]->vote();
             voter->castVote();
+            voterToCandidate[voter->getVoterID()] = candidates[choice - 1]->getCandidateName(); // Record vote
             cout << "Vote cast successfully.\n";
         }
         else
@@ -77,16 +99,24 @@ void Election::conductElection(vector<Voter *> &voters)
 void Election::displayResults()
 {
     cout << "\n--- Election Results ---\n";
+    unordered_map<string, int> partyVotes;
     Candidate *winner = nullptr;
     int maxVotes = -1;
     for (auto &c : candidates)
     {
         cout << c->getCandidateName() << " (" << c->getParty() << ") - " << c->getVotes() << " votes\n";
+        partyVotes[c->getParty()] += c->getVotes();
         if (c->getVotes() > maxVotes)
         {
             maxVotes = c->getVotes();
             winner = c;
         }
+    }
+
+    cout << "\n--- Party-wise Results ---\n";
+    for (const auto &pair : partyVotes)
+    {
+        cout << pair.first << ": " << pair.second << " votes\n";
     }
 
     if (winner)
@@ -96,5 +126,13 @@ void Election::displayResults()
     else
     {
         cout << "No winner.\n";
+    }
+}
+
+void Election::displayVoterToCandidateMapping() const
+{
+    for (const auto &pair : voterToCandidate)
+    {
+        cout << "Voter ID: " << pair.first << " voted for: " << pair.second << "\n";
     }
 }

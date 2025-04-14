@@ -1,7 +1,9 @@
+// ElectionCommission.h
 #ifndef ELECTIONCOMMISSION_H
 #define ELECTIONCOMMISSION_H
 
 #include <vector>
+#include <string> // For string
 #include "Voter.h"
 #include "Candidate.h"
 #include "Election.h"
@@ -9,8 +11,8 @@
 class ElectionCommission
 {
 protected:
-    vector<Voter *> voters;
-    vector<Candidate *> candidates;
+    std::vector<Voter *> voters;
+    std::vector<Candidate *> candidates;
     Election *election;
 
 public:
@@ -18,7 +20,6 @@ public:
     void registerCandidate(Candidate *c);
     void listVoters();
     void listCandidates();
-    
 };
 
 class VoterVerification : public ElectionCommission
@@ -26,16 +27,18 @@ class VoterVerification : public ElectionCommission
 public:
     bool verifyVoter(Voter *v);
     bool verifyCandidate(Candidate *c);
+    bool deleteVoter(const std::string &voterID);           // New
+    bool deleteCandidate(const std::string &candidateName); // New
     void clearVoters();
     void clearCandidates();
 
     // Assuming VoterVerification inherits from ElectionCommission
-    vector<Voter *> getVoters() const
+    std::vector<Voter *> getVoters() const
     {
         return voters;
     }
 
-    vector<Candidate *> getCandidates() const
+    std::vector<Candidate *> getCandidates() const
     {
         return candidates;
     }
@@ -44,14 +47,10 @@ public:
 class ElectionOrganizers : public ElectionCommission
 {
 public:
-    void inheritDataFrom(const VoterVerification &verifier)
-    {
-        this->voters = verifier.getVoters();
-        this->candidates = verifier.getCandidates();
-    }
-
-    void startElection(string type, string date);
+    void inheritDataFrom(const VoterVerification &verifier);
+    void startElection(std::string type, std::string date, int pollId); // Updated
     void declareResults();
+    void displayVoterToCandidateMapping() const; // New
 };
 
 #endif

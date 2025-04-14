@@ -1,3 +1,4 @@
+// Candidate.cpp
 #include "Candidate.h"
 
 Candidate::Candidate(string name, int age, string qual, string party)
@@ -32,4 +33,14 @@ string Candidate::getCandidateName() const
 string Candidate::getParty() const
 {
     return partyName;
+}
+
+string Candidate::getQualification() const
+{
+    return qualification;
+}
+
+int Candidate::getAge() const // Implementation of the getter
+{
+    return age;
 }

@@ -1,8 +1,10 @@
+// PartyName.h
 #ifndef PARTYNAME_H
 #define PARTYNAME_H
 
 #include <iostream>
 #include <vector>
+#include <string> // For string
 using namespace std;
 
 class Candidate;

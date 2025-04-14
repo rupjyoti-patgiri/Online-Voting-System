@@ -1,23 +1,27 @@
+// Candidate.h
 #ifndef CANDIDATE_H
 #define CANDIDATE_H
 
 #include "PartyName.h"
+#include <string>
 
 class Candidate : public PartyName
 {
 private:
-    string candidateName;
+    std::string candidateName;
     int age;
-    string qualification;
+    std::string qualification;
     int voteCount;
 
 public:
-    Candidate(string name, int age, string qual, string party);
+    Candidate(std::string name, int age, std::string qual, std::string party);
     bool isEligible() const;
     void vote();
     int getVotes() const;
-    string getCandidateName() const;
-    string getParty() const;
+    std::string getCandidateName() const;
+    std::string getParty() const;
+    std::string getQualification() const;
+    int getAge() const; // Added getter for age
 };
 
 #endif

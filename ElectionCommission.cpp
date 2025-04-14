@@ -1,5 +1,7 @@
+// ElectionCommission.cpp
 #include "ElectionCommission.h"
 #include <iostream>
+#include <algorithm> // For remove_if
 using namespace std;
 
 void ElectionCommission::registerVoter(Voter *v)
@@ -14,7 +16,7 @@ void ElectionCommission::registerCandidate(Candidate *c)
 
 void ElectionCommission::listVoters()
 {
-    for (auto v : voters)
+    for (const auto &v : voters)
     {
         cout << "Voter: " << v->getName() << " - ID: " << v->getVoterID() << endl;
     }
@@ -22,7 +24,7 @@ void ElectionCommission::listVoters()
 
 void ElectionCommission::listCandidates()
 {
-    for (auto c : candidates)
+    for (const auto &c : candidates)
     {
         cout << "Candidate: " << c->getCandidateName() << " - Party: " << c->getParty() << endl;
     }
@@ -50,6 +52,34 @@ bool VoterVerification::verifyCandidate(Candidate *c)
     return false;
 }
 
+bool VoterVerification::deleteVoter(const string &voterID)
+{
+    auto it = remove_if(voters.begin(), voters.end(),
+                        [&](Voter *v)
+                        { return v->getVoterID() == voterID; });
+    if (it != voters.end())
+    {
+        delete *it;
+        voters.erase(it, voters.end());
+        return true;
+    }
+    return false;
+}
+
+bool VoterVerification::deleteCandidate(const string &candidateName)
+{
+    auto it = remove_if(candidates.begin(), candidates.end(),
+                        [&](Candidate *c)
+                        { return c->getCandidateName() == candidateName; });
+    if (it != candidates.end())
+    {
+        delete *it;
+        candidates.erase(it, candidates.end());
+        return true;
+    }
+    return false;
+}
+
 void VoterVerification::clearVoters()
 {
     for (auto v : voters)
@@ -64,9 +94,23 @@ void VoterVerification::clearCandidates()
     candidates.clear();
 }
 
-void ElectionOrganizers::startElection(string type, string date)
+void ElectionOrganizers::inheritDataFrom(const VoterVerification &verifier)
 {
-    election = new Election(type, date);
+    this->voters.clear(); // Ensure no duplicate data
+    for (const auto &v : verifier.getVoters())
+    {
+        this->voters.push_back(new Voter(*v)); // Create copies
+    }
+    this->candidates.clear(); // Ensure no duplicate data
+    for (const auto &c : verifier.getCandidates())
+    {
+        this->candidates.push_back(new Candidate(*c)); // Create copies
+    }
+}
+
+void ElectionOrganizers::startElection(string type, string date, int pollId)
+{
+    election = new Election(type, date, pollId);
     for (auto c : candidates)
     {
         election->addCandidate(c);
@@ -78,4 +122,14 @@ void ElectionOrganizers::declareResults()
 {
     if (election)
         election->displayResults();
+    else
+        cout << "No election has been started yet.\n";
+}
+
+void ElectionOrganizers::displayVoterToCandidateMapping() const
+{
+    if (election)
+        election->displayVoterToCandidateMapping();
+    else
+        cout << "No election has been started yet to display voter mapping.\n";
 }

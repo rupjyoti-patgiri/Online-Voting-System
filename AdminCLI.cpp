@@ -1,7 +1,9 @@
+// AdminCLI.cpp
 #include "AdminCLI.h"
 #include <iostream>
 #include <fstream>
 #include <limits>
+#include <sstream> // For stringstream
 
 using namespace std;
 
@@ -20,27 +22,31 @@ bool AdminCLI::login()
 void AdminCLI::loadAllData()
 {
     ifstream vin("voters.txt");
-    string name, id;
-    int age;
-
-    while (vin >> ws && getline(vin, name))
+    string line;
+    while (getline(vin, line))
     {
-        vin >> age >> ws;
-        getline(vin, id);
-        Voter *v = new Voter(name, age, id);
-        voterVerifier.registerVoter(v);
+        stringstream ss(line);
+        string name, id, pin_str;
+        int age;
+        if (getline(ss, name, '|') && ss >> age && getline(ss >> ws, id, '|') && getline(ss >> ws, pin_str))
+        {
+            Voter *v = new Voter(name, age, id, pin_str);
+            voterVerifier.registerVoter(v);
+        }
     }
     vin.close();
 
     ifstream cinFile("candidates.txt");
-    string party, qual;
-    while (cinFile >> ws && getline(cinFile, name))
+    while (getline(cinFile, line))
     {
-        cinFile >> age >> ws;
-        getline(cinFile, qual);
-        getline(cinFile, party);
-        Candidate *c = new Candidate(name, age, qual, party);
-        voterVerifier.registerCandidate(c);
+        stringstream ss(line);
+        string name, party, qual;
+        int age;
+        if (getline(ss, name, '|') && ss >> age && getline(ss >> ws, qual, '|') && getline(ss >> ws, party, '|'))
+        {
+            Candidate *c = new Candidate(name, age, qual, party);
+            voterVerifier.registerCandidate(c);
+        }
     }
     cinFile.close();
 }
@@ -49,22 +55,24 @@ void AdminCLI::saveAllData()
 {
     ofstream vout("voters.txt");
     for (auto v : voterVerifier.getVoters())
-        vout << v->getName() << "\n"
-             << v->isEligible() << "\n"
-             << v->getVoterID() << "\n";
+        vout << v->getName() << "|"
+             << v->getAge() << "|"
+             << v->getVoterID() << "|"
+             << v->getPrivatePin() << "\n";
     vout.close();
 
     ofstream coutFile("candidates.txt");
     for (auto c : voterVerifier.getCandidates())
-        coutFile << c->getCandidateName() << "\n"
-                 << c->isEligible() << "\n"
+        coutFile << c->getCandidateName() << "|"
+                 << c->getAge() << "|"
+                 << c->getQualification() << "|"
                  << c->getParty() << "\n";
     coutFile.close();
 }
 
 void AdminCLI::registerVoter()
 {
-    string name, id;
+    string name, id, pin;
     int age;
     cin.ignore();
     cout << "\nEnter Name: ";
@@ -74,14 +82,33 @@ void AdminCLI::registerVoter()
     cin.ignore();
     cout << "Enter Voter ID: ";
     getline(cin, id);
+    cout << "Enter Private PIN for Voter: ";
+    getline(cin, pin);
 
-    Voter *v = new Voter(name, age, id);
+    Voter *v = new Voter(name, age, id, pin);
     if (voterVerifier.verifyVoter(v))
         voterVerifier.registerVoter(v);
     else
         delete v;
 
     saveAllData();
+}
+
+void AdminCLI::deleteVoter()
+{
+    string idToDelete;
+    cin.ignore();
+    cout << "Enter Voter ID to delete: ";
+    getline(cin, idToDelete);
+    if (voterVerifier.deleteVoter(idToDelete))
+    {
+        cout << "Voter with ID " << idToDelete << " deleted successfully.\n";
+        saveAllData();
+    }
+    else
+    {
+        cout << "Voter with ID " << idToDelete << " not found.\n";
+    }
 }
 
 void AdminCLI::registerCandidate()
@@ -96,7 +123,7 @@ void AdminCLI::registerCandidate()
     cin.ignore();
     cout << "Enter Qualification: ";
     getline(cin, qual);
-    cout << "Enter Party Name: ";
+    cout << "Enter Party Name (leave empty for independent): ";
     getline(cin, party);
 
     Candidate *c = new Candidate(name, age, qual, party);
@@ -106,6 +133,23 @@ void AdminCLI::registerCandidate()
         delete c;
 
     saveAllData();
+}
+
+void AdminCLI::deleteCandidate()
+{
+    string nameToDelete;
+    cin.ignore();
+    cout << "Enter Candidate Name to delete: ";
+    getline(cin, nameToDelete);
+    if (voterVerifier.deleteCandidate(nameToDelete))
+    {
+        cout << "Candidate " << nameToDelete << " deleted successfully.\n";
+        saveAllData();
+    }
+    else
+    {
+        cout << "Candidate " << nameToDelete << " not found.\n";
+    }
 }
 
 void AdminCLI::resetSystem()
@@ -120,6 +164,42 @@ void AdminCLI::resetSystem()
     cout << "\nSystem has been reset. All data cleared.\n";
 }
 
+void AdminCLI::listAlreadyVoted()
+{
+    cout << "\n==== Already Voted Voters ====\n";
+    bool found = false;
+    for (const auto &voter : voterVerifier.getVoters())
+    {
+        if (voter->voteStatus())
+        {
+            cout << "- " << voter->getName() << " (ID: " << voter->getVoterID() << ")\n";
+            found = true;
+        }
+    }
+    if (!found)
+    {
+        cout << "No voters have voted yet.\n";
+    }
+}
+
+void AdminCLI::showVoterToCandidateMapping()
+{
+    string passwordAttempt;
+    cout << "\nEnter password to view voter to candidate mapping: ";
+    cin >> passwordAttempt;
+    cin.ignore(); // Consume newline
+
+    if (passwordAttempt == voterMappingPassword)
+    {
+        cout << "\n==== Voter to Candidate Mapping ====\n";
+        organizers.displayVoterToCandidateMapping();
+    }
+    else
+    {
+        cout << "Incorrect password.\n";
+    }
+}
+
 void AdminCLI::showMenu()
 {
     int choice;
@@ -127,12 +207,16 @@ void AdminCLI::showMenu()
     {
         cout << "\n==== Admin Dashboard ====\n";
         cout << "1. Register Voter\n";
-        cout << "2. Register Candidate\n";
-        cout << "3. Start Election\n";
-        cout << "4. Declare Results\n";
-        cout << "5. List Voters\n";
-        cout << "6. List Candidates\n";
-        cout << "7. RESET SYSTEM\n";
+        cout << "2. Delete Voter\n"; // New option
+        cout << "3. Register Candidate\n";
+        cout << "4. Delete Candidate\n"; // New option
+        cout << "5. Start Election\n";
+        cout << "6. Declare Results\n";
+        cout << "7. List Voters\n";
+        cout << "8. List Candidates\n";
+        cout << "9. List Already Voted Voters\n";                    // New option
+        cout << "10. View Voter to Candidate Mapping (Protected)\n"; // New option
+        cout << "11. RESET SYSTEM\n";
         cout << "0. Exit\n";
         cout << "Choose: ";
         cin >> choice;
@@ -143,31 +227,46 @@ void AdminCLI::showMenu()
             registerVoter();
             break;
         case 2:
-            registerCandidate();
+            deleteVoter();
             break;
         case 3:
+            registerCandidate();
+            break;
+        case 4:
+            deleteCandidate();
+            break;
+        case 5:
         {
             string type, date;
+            int pollId; // New
+            cin.ignore();
+            cout << "Enter Poll ID: "; // New
+            cin >> pollId;             // New
             cin.ignore();
             cout << "Enter Type (Open/Restricted): ";
             getline(cin, type);
             cout << "Enter Date (DD/MM/YYYY): ";
             getline(cin, date);
             organizers.inheritDataFrom(voterVerifier);
-            // inherit data
-            organizers.startElection(type, date);
+            organizers.startElection(type, date, pollId); // Updated
             break;
         }
-        case 4:
+        case 6:
             organizers.declareResults();
             break;
-        case 5:
+        case 7:
             voterVerifier.listVoters();
             break;
-        case 6:
+        case 8:
             voterVerifier.listCandidates();
             break;
-        case 7:
+        case 9:
+            listAlreadyVoted();
+            break;
+        case 10:
+            showVoterToCandidateMapping();
+            break;
+        case 11:
             resetSystem();
             break;
         case 0:
@@ -185,6 +284,7 @@ void AdminCLI::run()
     {
         loadAllData();
         showMenu();
+        saveAllData(); // Save any changes made during the session
     }
     else
     {
