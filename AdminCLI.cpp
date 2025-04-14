@@ -147,9 +147,10 @@ void AdminCLI::registerCandidate()
 void AdminCLI::deleteCandidate()
 {
     string idToDelete;
+    cin.ignore(); // Add cin.ignore() here
     cout << "Enter Candidate ID to delete: ";
     getline(cin, idToDelete);
-    cout << "Attempting to delete candidate with ID: " << idToDelete << endl; // Debugging line
+    cout << "Attempting to delete candidate with ID: \"" << idToDelete << "\"" << endl; // Debugging line
     if (voterVerifier.deleteCandidate(idToDelete))
     {
         cout << "Candidate with ID " << idToDelete << " deleted successfully.\n";
