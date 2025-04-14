@@ -36,7 +36,7 @@ void Election::conductElection(vector<Voter *> &voters)
 
     while (true)
     {
-        string id, pin, voterAssembly; // Added voterAssembly
+        string id, pin, voterAssembly;
         cout << "\nEnter Voter ID to vote (or type 'exit' to end voting): ";
         cin >> id;
 
@@ -60,12 +60,12 @@ void Election::conductElection(vector<Voter *> &voters)
             continue;
         }
 
-        cout << "Enter your Assembly: "; // Added assembly prompt
+        cout << "Enter your Assembly: ";
         cin >> voterAssembly;
-        cin.ignore(); // Consume newline
+        cin.ignore();
 
         if (voterAssembly != voter->getAssembly())
-        { // Optional: Assembly verification
+        {
             cout << "Assembly does not match registered assembly.\n";
             continue;
         }
@@ -82,21 +82,32 @@ void Election::conductElection(vector<Voter *> &voters)
         }
 
         cout << "\nWelcome, " << voter->getName() << "! Please cast your vote:\n";
+        vector<Candidate *> eligibleCandidates; // Create a vector for eligible candidates
         for (int i = 0; i < candidates.size(); ++i)
         {
-            cout << i + 1 << ". " << candidates[i]->getCandidateName()
-                 << " (" << candidates[i]->getParty() << ") - Assembly: " << candidates[i]->getAssembly() << "\n"; // Show candidate assembly
+            if (candidates[i]->getAssembly() == voterAssembly)
+            {
+                eligibleCandidates.push_back(candidates[i]);
+                cout << eligibleCandidates.size() << ". " << candidates[i]->getCandidateName()
+                     << " (" << candidates[i]->getParty() << ")\n";
+            }
+        }
+
+        if (eligibleCandidates.empty())
+        {
+            cout << "No candidates found for your assembly.\n";
+            continue;
         }
 
         int choice;
         cout << "Enter choice (number): ";
         cin >> choice;
 
-        if (choice >= 1 && choice <= candidates.size())
+        if (choice >= 1 && choice <= eligibleCandidates.size())
         {
-            candidates[choice - 1]->vote();
+            eligibleCandidates[choice - 1]->vote();
             voter->castVote();
-            voterToCandidate[voter->getVoterID()] = candidates[choice - 1]->getCandidateName();
+            voterToCandidate[voter->getVoterID()] = eligibleCandidates[choice - 1]->getCandidateName();
             cout << "Vote cast successfully.\n";
         }
         else

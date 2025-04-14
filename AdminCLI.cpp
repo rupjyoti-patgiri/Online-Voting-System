@@ -146,10 +146,11 @@ void AdminCLI::registerCandidate()
 
 void AdminCLI::deleteCandidate()
 {
-    string idToDelete; // Changed to string
+    string idToDelete;
     cout << "Enter Candidate ID to delete: ";
     getline(cin, idToDelete);
-    if (voterVerifier.deleteCandidate(idToDelete)) // Updated call
+    cout << "Attempting to delete candidate with ID: " << idToDelete << endl; // Debugging line
+    if (voterVerifier.deleteCandidate(idToDelete))
     {
         cout << "Candidate with ID " << idToDelete << " deleted successfully.\n";
         saveAllData();

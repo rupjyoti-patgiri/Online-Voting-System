@@ -66,8 +66,13 @@ bool VoterVerification::deleteVoter(const string &voterID)
     return false;
 }
 
-bool VoterVerification::deleteCandidate(const string &candidateID) // Changed parameter type
+bool VoterVerification::deleteCandidate(const string &candidateID)
 {
+    cout << "Searching for candidate with ID: " << candidateID << endl; // Debugging line
+    for (const auto &c : candidates)
+    {
+        cout << "Checking candidate with ID: " << c->getCandidateID() << endl; // Debugging line
+    }
     auto it = remove_if(candidates.begin(), candidates.end(),
                         [&](Candidate *c)
                         { return c->getCandidateID() == candidateID; });
