@@ -36,7 +36,7 @@ void Election::conductElection(vector<Voter *> &voters)
 
     while (true)
     {
-        string id, pin; // Added pin
+        string id, pin, voterAssembly; // Added voterAssembly
         cout << "\nEnter Voter ID to vote (or type 'exit' to end voting): ";
         cin >> id;
 
@@ -51,12 +51,22 @@ void Election::conductElection(vector<Voter *> &voters)
 
         Voter *voter = voterMap[id];
 
-        cout << "Enter your Private PIN: "; // Added pin prompt
+        cout << "Enter your Private PIN: ";
         cin >> pin;
 
-        if (pin != voter->getPrivatePin()) // Verify pin
+        if (pin != voter->getPrivatePin())
         {
             cout << "Incorrect PIN.\n";
+            continue;
+        }
+
+        cout << "Enter your Assembly: "; // Added assembly prompt
+        cin >> voterAssembly;
+        cin.ignore(); // Consume newline
+
+        if (voterAssembly != voter->getAssembly())
+        { // Optional: Assembly verification
+            cout << "Assembly does not match registered assembly.\n";
             continue;
         }
 
@@ -75,7 +85,7 @@ void Election::conductElection(vector<Voter *> &voters)
         for (int i = 0; i < candidates.size(); ++i)
         {
             cout << i + 1 << ". " << candidates[i]->getCandidateName()
-                 << " (" << candidates[i]->getParty() << ")\n";
+                 << " (" << candidates[i]->getParty() << ") - Assembly: " << candidates[i]->getAssembly() << "\n"; // Show candidate assembly
         }
 
         int choice;
@@ -86,7 +96,7 @@ void Election::conductElection(vector<Voter *> &voters)
         {
             candidates[choice - 1]->vote();
             voter->castVote();
-            voterToCandidate[voter->getVoterID()] = candidates[choice - 1]->getCandidateName(); // Record vote
+            voterToCandidate[voter->getVoterID()] = candidates[choice - 1]->getCandidateName();
             cout << "Vote cast successfully.\n";
         }
         else
@@ -104,7 +114,7 @@ void Election::displayResults()
     int maxVotes = -1;
     for (auto &c : candidates)
     {
-        cout << c->getCandidateName() << " (" << c->getParty() << ") - " << c->getVotes() << " votes\n";
+        cout << c->getCandidateName() << " (" << c->getParty() << ") - " << c->getVotes() << " votes - Assembly: " << c->getAssembly() << "\n"; // Show assembly
         partyVotes[c->getParty()] += c->getVotes();
         if (c->getVotes() > maxVotes)
         {
@@ -114,14 +124,22 @@ void Election::displayResults()
     }
 
     cout << "\n--- Party-wise Results ---\n";
+    string winningParty;
+    int maxPartyVotes = -1;
     for (const auto &pair : partyVotes)
     {
         cout << pair.first << ": " << pair.second << " votes\n";
+        if (pair.second > maxPartyVotes)
+        {
+            maxPartyVotes = pair.second;
+            winningParty = pair.first;
+        }
     }
 
     if (winner)
     {
         cout << "\nWinner: " << winner->getCandidateName() << " from " << winner->getParty() << " with " << maxVotes << " votes.\n";
+        cout << "Winning Party: " << winningParty << " with " << maxPartyVotes << " total votes.\n"; // Declare winning party
     }
     else
     {

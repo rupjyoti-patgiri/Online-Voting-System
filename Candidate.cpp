@@ -1,7 +1,8 @@
 // Candidate.cpp
 #include "Candidate.h"
 
-Candidate::Candidate(string name, int age, string qual, string party)
+Candidate::Candidate(string name, int age, string qual, string party, string id, string assembly)
+    : candidateID(id), assembly(assembly)
 {
     candidateName = name;
     this->age = age;
@@ -40,7 +41,17 @@ string Candidate::getQualification() const
     return qualification;
 }
 
-int Candidate::getAge() const // Implementation of the getter
+int Candidate::getAge() const
 {
     return age;
+}
+
+string Candidate::getCandidateID() const // Updated getter
+{
+    return candidateID;
+}
+
+string Candidate::getAssembly() const
+{
+    return assembly;
 }

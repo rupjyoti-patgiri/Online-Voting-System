@@ -66,11 +66,11 @@ bool VoterVerification::deleteVoter(const string &voterID)
     return false;
 }
 
-bool VoterVerification::deleteCandidate(const string &candidateName)
+bool VoterVerification::deleteCandidate(const string &candidateID) // Changed parameter type
 {
     auto it = remove_if(candidates.begin(), candidates.end(),
                         [&](Candidate *c)
-                        { return c->getCandidateName() == candidateName; });
+                        { return c->getCandidateID() == candidateID; });
     if (it != candidates.end())
     {
         delete *it;
@@ -96,16 +96,8 @@ void VoterVerification::clearCandidates()
 
 void ElectionOrganizers::inheritDataFrom(const VoterVerification &verifier)
 {
-    this->voters.clear(); // Ensure no duplicate data
-    for (const auto &v : verifier.getVoters())
-    {
-        this->voters.push_back(new Voter(*v)); // Create copies
-    }
-    this->candidates.clear(); // Ensure no duplicate data
-    for (const auto &c : verifier.getCandidates())
-    {
-        this->candidates.push_back(new Candidate(*c)); // Create copies
-    }
+    this->voters = verifier.getVoters();
+    this->candidates = verifier.getCandidates();
 }
 
 void ElectionOrganizers::startElection(string type, string date, int pollId)

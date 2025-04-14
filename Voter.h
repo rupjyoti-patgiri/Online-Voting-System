@@ -11,18 +11,20 @@ private:
     string name;
     int age;
     string voterID;
-    string privatePin; // New
+    string privatePin;
     bool hasVoted;
+    string assembly; // New
 
 public:
-    Voter(string name, int age, string id, string pin); // Updated constructor
+    Voter(string name, int age, string id, string pin, string assembly = ""); // Updated constructor
     bool isEligible() const;
     bool voteStatus() const;
     void castVote();
     string getVoterID() const;
     string getName() const;
-    int getAge() const;           // New getter
-    string getPrivatePin() const; // New getter
+    int getAge() const;
+    string getPrivatePin() const;
+    string getAssembly() const; // New
 };
 
 #endif

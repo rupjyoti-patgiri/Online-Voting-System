@@ -1,7 +1,8 @@
 // Voter.cpp
 #include "Voter.h"
 
-Voter::Voter(string name, int age, string id, string pin) : privatePin(pin)
+Voter::Voter(string name, int age, string id, string pin, string assembly)
+    : privatePin(pin), assembly(assembly)
 {
     this->name = name;
     this->age = age;
@@ -42,4 +43,9 @@ int Voter::getAge() const
 string Voter::getPrivatePin() const
 {
     return privatePin;
+}
+
+string Voter::getAssembly() const
+{
+    return assembly;
 }

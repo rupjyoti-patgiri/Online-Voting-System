@@ -28,7 +28,7 @@ public:
     bool verifyVoter(Voter *v);
     bool verifyCandidate(Candidate *c);
     bool deleteVoter(const std::string &voterID);           // New
-    bool deleteCandidate(const std::string &candidateName); // New
+    bool deleteCandidate(const std::string &candidateID); // New
     void clearVoters();
     void clearCandidates();
 

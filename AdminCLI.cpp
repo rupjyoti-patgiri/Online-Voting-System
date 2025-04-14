@@ -26,11 +26,11 @@ void AdminCLI::loadAllData()
     while (getline(vin, line))
     {
         stringstream ss(line);
-        string name, id, pin_str;
+        string name, id, pin_str, assembly;
         int age;
-        if (getline(ss, name, '|') && ss >> age && getline(ss >> ws, id, '|') && getline(ss >> ws, pin_str))
+        if (getline(ss, name, '|') && ss >> age && getline(ss >> ws, id, '|') && getline(ss >> ws, pin_str, '|') && getline(ss >> ws, assembly))
         {
-            Voter *v = new Voter(name, age, id, pin_str);
+            Voter *v = new Voter(name, age, id, pin_str, assembly);
             voterVerifier.registerVoter(v);
         }
     }
@@ -40,11 +40,11 @@ void AdminCLI::loadAllData()
     while (getline(cinFile, line))
     {
         stringstream ss(line);
-        string name, party, qual;
+        string name, party, qual, id_str, assembly;
         int age;
-        if (getline(ss, name, '|') && ss >> age && getline(ss >> ws, qual, '|') && getline(ss >> ws, party, '|'))
+        if (getline(ss, name, '|') && ss >> age && getline(ss >> ws, qual, '|') && getline(ss >> ws, party, '|') && getline(ss >> ws, id_str, '|') && getline(ss >> ws, assembly))
         {
-            Candidate *c = new Candidate(name, age, qual, party);
+            Candidate *c = new Candidate(name, age, qual, party, id_str, assembly); // id_str is already a string
             voterVerifier.registerCandidate(c);
         }
     }
@@ -58,7 +58,8 @@ void AdminCLI::saveAllData()
         vout << v->getName() << "|"
              << v->getAge() << "|"
              << v->getVoterID() << "|"
-             << v->getPrivatePin() << "\n";
+             << v->getPrivatePin() << "|"
+             << v->getAssembly() << "\n";
     vout.close();
 
     ofstream coutFile("candidates.txt");
@@ -66,13 +67,15 @@ void AdminCLI::saveAllData()
         coutFile << c->getCandidateName() << "|"
                  << c->getAge() << "|"
                  << c->getQualification() << "|"
-                 << c->getParty() << "\n";
+                 << c->getParty() << "|"
+                 << c->getCandidateID() << "|" // Now a string
+                 << c->getAssembly() << "\n";
     coutFile.close();
 }
 
 void AdminCLI::registerVoter()
 {
-    string name, id, pin;
+    string name, id, pin, assembly;
     int age;
     cin.ignore();
     cout << "\nEnter Name: ";
@@ -84,8 +87,10 @@ void AdminCLI::registerVoter()
     getline(cin, id);
     cout << "Enter Private PIN for Voter: ";
     getline(cin, pin);
+    cout << "Enter Assembly: "; // Added assembly input
+    getline(cin, assembly);
 
-    Voter *v = new Voter(name, age, id, pin);
+    Voter *v = new Voter(name, age, id, pin, assembly); // Updated constructor call
     if (voterVerifier.verifyVoter(v))
         voterVerifier.registerVoter(v);
     else
@@ -113,7 +118,7 @@ void AdminCLI::deleteVoter()
 
 void AdminCLI::registerCandidate()
 {
-    string name, qual, party;
+    string name, qual, party, assembly, id; // Changed id type to string
     int age;
     cin.ignore();
     cout << "\nEnter Candidate Name: ";
@@ -125,8 +130,12 @@ void AdminCLI::registerCandidate()
     getline(cin, qual);
     cout << "Enter Party Name (leave empty for independent): ";
     getline(cin, party);
+    cout << "Enter Candidate ID: "; // Input as string
+    getline(cin, id);
+    cout << "Enter Assembly: ";
+    getline(cin, assembly);
 
-    Candidate *c = new Candidate(name, age, qual, party);
+    Candidate *c = new Candidate(name, age, qual, party, id, assembly); // Updated constructor call
     if (voterVerifier.verifyCandidate(c))
         voterVerifier.registerCandidate(c);
     else
@@ -137,18 +146,17 @@ void AdminCLI::registerCandidate()
 
 void AdminCLI::deleteCandidate()
 {
-    string nameToDelete;
-    cin.ignore();
-    cout << "Enter Candidate Name to delete: ";
-    getline(cin, nameToDelete);
-    if (voterVerifier.deleteCandidate(nameToDelete))
+    string idToDelete; // Changed to string
+    cout << "Enter Candidate ID to delete: ";
+    getline(cin, idToDelete);
+    if (voterVerifier.deleteCandidate(idToDelete)) // Updated call
     {
-        cout << "Candidate " << nameToDelete << " deleted successfully.\n";
+        cout << "Candidate with ID " << idToDelete << " deleted successfully.\n";
         saveAllData();
     }
     else
     {
-        cout << "Candidate " << nameToDelete << " not found.\n";
+        cout << "Candidate with ID " << idToDelete << " not found.\n";
     }
 }
 
