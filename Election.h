@@ -4,28 +4,29 @@
 
 #include <string>
 #include <vector>
-#include <map> // For voter to candidate mapping
+// Removed #include <map> - no longer needed
 #include "Candidate.h"
 #include "Voter.h"
 
-using namespace std;
+// using namespace std; // Avoid 'using namespace std' in header files
 
 class Election
 {
 private:
-    string electionType;
-    string date;
-    int pollID; // New
-    vector<Candidate *> candidates;
-    map<string, string> voterToCandidate; // VoterID -> CandidateName (New)
+    std::string electionType;
+    std::string date;
+    int pollID;
+    std::vector<Candidate *> candidatesInElection; // Candidates participating in this specific election
+    // Removed map<string, string> voterToCandidate;
 
 public:
-    Election(string type, string date, int pollId); // Updated constructor
-    int getPollID() const { return pollID; }        // New getter
+    Election(std::string type, std::string date, int pollId);
+    int getPollID() const { return pollID; }
     void addCandidate(Candidate *c);
-    void conductElection(vector<Voter *> &voters);
+    // Takes a reference to the vector of voter pointers
+    void conductElection(std::vector<Voter *> &allVoters);
     void displayResults();
-    void displayVoterToCandidateMapping() const; // New
+    // Removed displayVoterToCandidateMapping() declaration
 };
 
-#endif
+#endif // ELECTION_H

@@ -2,166 +2,256 @@
 #include "Election.h"
 #include <iostream>
 #include <limits>
-#include <unordered_map>
-using namespace std;
+#include <unordered_map> // Keep for voterMap lookup efficiency
+#include <vector>        // Keep for eligibleCandidates list
 
-Election::Election(string type, string date, int pollId) : pollID(pollId)
+// using namespace std; // Avoid in implementation file unless necessary, prefer std:: prefix
+
+Election::Election(std::string type, std::string date, int pollId) : electionType(type), date(date), pollID(pollId)
 {
-    this->electionType = type;
-    this->date = date;
+    // Constructor body can be empty if initialization list does all the work
 }
 
 void Election::addCandidate(Candidate *c)
 {
-    candidates.push_back(c);
+    if (c)
+    { // Basic null check
+        candidatesInElection.push_back(c);
+    }
 }
 
-void Election::conductElection(vector<Voter *> &voters)
+// Conduct election using the provided list of all registered voters
+void Election::conductElection(std::vector<Voter *> &allVoters)
 {
-    unordered_map<string, Voter *> voterMap;
-    for (auto &v : voters)
+    // Create a map for efficient lookup of voters by ID during the voting process
+    std::unordered_map<std::string, Voter *> voterMap;
+    for (Voter *v : allVoters) // Iterate through the pointers in the passed vector
     {
-        voterMap[v->getVoterID()] = v;
+        if (v)
+        { // Check if pointer is not null
+            voterMap[v->getVoterID()] = v;
+        }
     }
 
-    int currentPollID;
-    cout << "Enter Poll ID to proceed with voting: ";
-    cin >> currentPollID;
+    int currentPollIDAttempt;
+    std::cout << "\n--- Voting Booth (Poll ID: " << this->pollID << ") ---\n";
+    std::cout << "Enter Poll ID again to proceed with voting: ";
 
-    if (currentPollID != pollID)
+    // Input validation for Poll ID attempt
+    while (!(std::cin >> currentPollIDAttempt))
     {
-        cout << "Incorrect Poll ID. Voting cannot proceed.\n";
+        std::cout << "Invalid input. Please enter the numeric Poll ID: ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume newline
+
+    if (currentPollIDAttempt != this->pollID)
+    {
+        std::cout << "Incorrect Poll ID entered. Voting cannot proceed for this session.\n";
         return;
     }
 
+    std::cout << "Poll ID Verified. Voting can commence.\n";
+
     while (true)
     {
-        string id, pin, voterAssembly;
-        cout << "\nEnter Voter ID to vote (or type 'exit' to end voting): ";
-        cin >> id;
+        std::string id_attempt, pin_attempt, voterAssembly_attempt;
+        std::cout << "\nEnter Voter ID to cast vote (or type 'exit' to end voting session): ";
+        std::getline(std::cin, id_attempt); // Use getline to handle potential spaces in IDs if format changes
 
-        if (id == "exit")
+        if (id_attempt == "exit")
+        {
+            std::cout << "Exiting voting session.\n";
             break;
+        }
 
-        if (voterMap.find(id) == voterMap.end())
+        // Find voter using the map
+        auto map_iter = voterMap.find(id_attempt);
+        if (map_iter == voterMap.end())
         {
-            cout << "Invalid Voter ID.\n";
+            std::cout << "Error: Voter ID '" << id_attempt << "' not found in the registry.\n";
             continue;
         }
 
-        Voter *voter = voterMap[id];
+        Voter *currentVoter = map_iter->second; // Get the pointer to the voter object
 
-        cout << "Enter your Private PIN: ";
-        cin >> pin;
+        std::cout << "Enter Private PIN for Voter ID " << id_attempt << ": ";
+        std::getline(std::cin, pin_attempt);
 
-        if (pin != voter->getPrivatePin())
+        if (pin_attempt != currentVoter->getPrivatePin())
         {
-            cout << "Incorrect PIN.\n";
+            std::cout << "Error: Incorrect PIN entered. Please try again.\n";
             continue;
         }
 
-        cout << "Enter your Assembly: ";
-        cin >> voterAssembly;
-        cin.ignore();
+        // Optional: Re-verify assembly if needed (can be strict)
+        std::cout << "Enter Your Assembly Constituency: ";
+        std::getline(std::cin, voterAssembly_attempt);
 
-        if (voterAssembly != voter->getAssembly())
+        if (voterAssembly_attempt != currentVoter->getAssembly())
         {
-            cout << "Assembly does not match registered assembly.\n";
+            std::cout << "Error: Entered assembly '" << voterAssembly_attempt
+                      << "' does not match the registered assembly '" << currentVoter->getAssembly()
+                      << "' for this voter.\n";
             continue;
         }
 
-        if (!voter->isEligible())
+        // Check eligibility and voting status again (belt-and-suspenders)
+        if (!currentVoter->isEligible())
         {
-            cout << "You are not eligible to vote.\n";
+            std::cout << "Error: Voter " << currentVoter->getName() << " is not eligible to vote (based on age criteria).\n";
             continue;
         }
-        if (voter->voteStatus())
+        if (currentVoter->voteStatus())
         {
-            cout << "You have already voted.\n";
+            std::cout << "Info: Voter " << currentVoter->getName() << " (ID: " << id_attempt << ") has already cast their vote.\n";
             continue;
         }
 
-        cout << "\nWelcome, " << voter->getName() << "! Please cast your vote:\n";
-        vector<Candidate *> eligibleCandidates; // Create a vector for eligible candidates
-        for (int i = 0; i < candidates.size(); ++i)
+        // --- Display Candidates for Voter's Assembly ---
+        std::cout << "\nWelcome, " << currentVoter->getName() << "!\n";
+        std::cout << "Candidates for your assembly (" << currentVoter->getAssembly() << "):\n";
+
+        std::vector<Candidate *> eligibleCandidates; // Candidates matching voter's assembly
+        int displayIndex = 1;
+        for (Candidate *c : candidatesInElection) // Iterate through candidates added to *this* election
         {
-            if (candidates[i]->getAssembly() == voterAssembly)
+            if (c && c->getAssembly() == currentVoter->getAssembly()) // Check assembly match
             {
-                eligibleCandidates.push_back(candidates[i]);
-                cout << eligibleCandidates.size() << ". " << candidates[i]->getCandidateName()
-                     << " (" << candidates[i]->getParty() << ")\n";
+                eligibleCandidates.push_back(c);
+                std::cout << "  " << displayIndex++ << ". " << c->getCandidateName()
+                          << " (" << (c->getParty().empty() ? "Independent" : c->getParty()) << ")\n";
             }
         }
 
         if (eligibleCandidates.empty())
         {
-            cout << "No candidates found for your assembly.\n";
-            continue;
+            std::cout << "No candidates found registered for your assembly (" << currentVoter->getAssembly() << ") in this election.\n";
+            // Decide action: skip voter or allow 'NOTA' (None Of The Above) if implemented
+            continue; // Skip this voter for now
         }
 
-        int choice;
-        cout << "Enter choice (number): ";
-        cin >> choice;
+        // --- Cast Vote ---
+        int choice = 0;
+        std::cout << "Enter the number corresponding to your chosen candidate: ";
 
-        if (choice >= 1 && choice <= eligibleCandidates.size())
+        // Input validation for choice
+        while (!(std::cin >> choice) || choice < 1 || choice > eligibleCandidates.size())
         {
-            eligibleCandidates[choice - 1]->vote();
-            voter->castVote();
-            voterToCandidate[voter->getVoterID()] = eligibleCandidates[choice - 1]->getCandidateName();
-            cout << "Vote cast successfully.\n";
+            std::cout << "Invalid choice. Please enter a number between 1 and " << eligibleCandidates.size() << ": ";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
-        else
-        {
-            cout << "Invalid choice. Vote not recorded.\n";
-        }
-    }
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume newline
+
+        // Record the vote
+        Candidate *chosenCandidate = eligibleCandidates[choice - 1];
+        chosenCandidate->vote();  // Increment candidate's vote count
+        currentVoter->castVote(); // Mark the voter as having voted (updates the object in the main list via pointer)
+
+        // Removed voterToCandidate mapping logic
+
+        std::cout << "Vote cast successfully for " << chosenCandidate->getCandidateName() << ".\n";
+        std::cout << "Thank you for voting, " << currentVoter->getName() << "!\n";
+
+    } // End of while(true) voting loop
 }
 
 void Election::displayResults()
 {
-    cout << "\n--- Election Results ---\n";
-    unordered_map<string, int> partyVotes;
-    Candidate *winner = nullptr;
-    int maxVotes = -1;
-    for (auto &c : candidates)
+    std::cout << "\n--- Election Results (" << this->electionType << " - " << this->date << ", Poll ID: " << this->pollID << ") ---\n";
+
+    if (candidatesInElection.empty())
     {
-        cout << c->getCandidateName() << " (" << c->getParty() << ") - " << c->getVotes() << " votes - Assembly: " << c->getAssembly() << "\n"; // Show assembly
-        partyVotes[c->getParty()] += c->getVotes();
+        std::cout << "No candidates participated or no votes were cast in this election.\n";
+        return;
+    }
+
+    std::cout << "Candidate Vote Counts:\n";
+    std::unordered_map<std::string, int> partyVotes; // Track total votes per party
+    std::string overallWinnerName = "N/A";
+    std::string overallWinnerParty = "N/A";
+    int maxVotes = -1;
+
+    for (const auto &c : candidatesInElection)
+    {
+        if (!c)
+            continue; // Skip null pointers if any crept in
+
+        std::string party = c->getParty().empty() ? "Independent" : c->getParty();
+        std::cout << "- " << c->getCandidateName() << " (" << party << ")"
+                  << " | Assembly: " << c->getAssembly()
+                  << " | Votes: " << c->getVotes() << "\n";
+
+        partyVotes[party] += c->getVotes();
+
+        // Determine overall winner (highest votes across all candidates)
         if (c->getVotes() > maxVotes)
         {
             maxVotes = c->getVotes();
-            winner = c;
+            overallWinnerName = c->getCandidateName();
+            overallWinnerParty = party;
         }
-    }
-
-    cout << "\n--- Party-wise Results ---\n";
-    string winningParty;
-    int maxPartyVotes = -1;
-    for (const auto &pair : partyVotes)
-    {
-        cout << pair.first << ": " << pair.second << " votes\n";
-        if (pair.second > maxPartyVotes)
+        // Handle ties? (Currently just shows the first one encountered with max votes)
+        else if (c->getVotes() == maxVotes && maxVotes > 0)
         {
-            maxPartyVotes = pair.second;
-            winningParty = pair.first;
+            // Indicate a tie for the highest vote count if desired
+            // overallWinnerName += " (Tie)"; // Simple tie indication
         }
     }
 
-    if (winner)
+    std::cout << "\n--- Party-wise Vote Summary ---\n";
+    std::string winningParty = "N/A";
+    int maxPartyVotes = -1;
+
+    if (partyVotes.empty())
     {
-        cout << "\nWinner: " << winner->getCandidateName() << " from " << winner->getParty() << " with " << maxVotes << " votes.\n";
-        cout << "Winning Party: " << winningParty << " with " << maxPartyVotes << " total votes.\n"; // Declare winning party
+        std::cout << "No votes recorded for any party.\n";
     }
     else
     {
-        cout << "No winner.\n";
+        for (const auto &pair : partyVotes)
+        {
+            std::cout << "- " << pair.first << ": " << pair.second << " total votes\n";
+            if (pair.second > maxPartyVotes)
+            {
+                maxPartyVotes = pair.second;
+                winningParty = pair.first;
+            }
+            else if (pair.second == maxPartyVotes && maxPartyVotes > 0)
+            {
+                // Handle party ties if needed
+                // winningParty += " (Tie)";
+            }
+        }
     }
+
+    std::cout << "\n--- Election Summary ---\n";
+    if (maxVotes < 0)
+    { // Checks if any votes were cast at all
+        std::cout << "No votes were cast in this election.\n";
+    }
+    else if (maxVotes == 0)
+    {
+        std::cout << "Votes were cast, but the maximum count was zero (or only zero-vote candidates).\n";
+        std::cout << "Winning Candidate: None\n";
+        std::cout << "Winning Party: None\n";
+    }
+    else
+    {
+        std::cout << "Winning Candidate: " << overallWinnerName
+                  << " (" << overallWinnerParty << ") with " << maxVotes << " votes.\n";
+        if (maxPartyVotes >= 0)
+        {
+            std::cout << "Party with Most Votes: " << winningParty << " with " << maxPartyVotes << " total votes.\n";
+        }
+        else
+        {
+            std::cout << "Party with Most Votes: N/A (No party votes recorded).\n";
+        }
+    }
+    std::cout << "---------------------------\n";
 }
 
-void Election::displayVoterToCandidateMapping() const
-{
-    for (const auto &pair : voterToCandidate)
-    {
-        cout << "Voter ID: " << pair.first << " voted for: " << pair.second << "\n";
-    }
-}
+// Removed displayVoterToCandidateMapping() implementation

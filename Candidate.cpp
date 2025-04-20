@@ -2,7 +2,7 @@
 #include "Candidate.h"
 
 Candidate::Candidate(string name, int age, string qual, string party, string id, string assembly)
-    : candidateID(id) ,assembly(assembly)
+    : candidateID(id), assembly(assembly)
 {
     candidateName = name;
     this->age = age;
