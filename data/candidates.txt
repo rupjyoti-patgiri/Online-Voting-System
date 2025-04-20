@@ -1,0 +1,4 @@
+Vikram Malhotra|56|Btech|BJP|200|Guwahati
+Deepika Joshi|67|BSC|Congress|201|Guwahati
+Karan Thakur|76|BA|BJP|202|Silchar
+Meera Banarjee|57|BSC|Congress|203|Silchar

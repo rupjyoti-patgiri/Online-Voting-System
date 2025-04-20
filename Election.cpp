@@ -2,20 +2,21 @@
 #include "Election.h"
 #include <iostream>
 #include <limits>
-#include <unordered_map> // Keep for voterMap lookup efficiency
-#include <vector>        // Keep for eligibleCandidates list
+#include <unordered_map>
+#include <vector>
+#include <iomanip> // Required for std::fixed and std::setprecision
 
 // using namespace std; // Avoid in implementation file unless necessary, prefer std:: prefix
 
 Election::Election(std::string type, std::string date, int pollId) : electionType(type), date(date), pollID(pollId)
 {
-    // Constructor body can be empty if initialization list does all the work
+    // Constructor body
 }
 
 void Election::addCandidate(Candidate *c)
 {
     if (c)
-    { // Basic null check
+    {
         candidatesInElection.push_back(c);
     }
 }
@@ -23,28 +24,48 @@ void Election::addCandidate(Candidate *c)
 // Conduct election using the provided list of all registered voters
 void Election::conductElection(std::vector<Voter *> &allVoters)
 {
-    // Create a map for efficient lookup of voters by ID during the voting process
+    // Create a map for efficient lookup of voters by ID
     std::unordered_map<std::string, Voter *> voterMap;
-    for (Voter *v : allVoters) // Iterate through the pointers in the passed vector
+    for (Voter *v : allVoters)
     {
         if (v)
-        { // Check if pointer is not null
+        {
             voterMap[v->getVoterID()] = v;
         }
     }
 
+    // --- Calculate Total Eligible Voters for Percentage Calculation ---
+    int totalEligibleVoters = 0;
+    for (const auto &v : allVoters)
+    {
+        if (v && v->isEligible())
+        { // Check for null pointer and eligibility
+            totalEligibleVoters++;
+        }
+    }
+    int votesCastThisSession = 0; // Counter for votes in this run
+    // --- ---
+
     int currentPollIDAttempt;
     std::cout << "\n--- Voting Booth (Poll ID: " << this->pollID << ") ---\n";
+    if (totalEligibleVoters == 0)
+    {
+        std::cout << "Warning: No eligible voters found for this election.\n";
+        // Election can technically proceed if candidates exist, but turnout will be 0%.
+    }
+    else
+    {
+        std::cout << "Total eligible voters for this election: " << totalEligibleVoters << "\n";
+    }
     std::cout << "Enter Poll ID again to proceed with voting: ";
 
-    // Input validation for Poll ID attempt
     while (!(std::cin >> currentPollIDAttempt))
     {
         std::cout << "Invalid input. Please enter the numeric Poll ID: ";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume newline
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     if (currentPollIDAttempt != this->pollID)
     {
@@ -58,7 +79,7 @@ void Election::conductElection(std::vector<Voter *> &allVoters)
     {
         std::string id_attempt, pin_attempt, voterAssembly_attempt;
         std::cout << "\nEnter Voter ID to cast vote (or type 'exit' to end voting session): ";
-        std::getline(std::cin, id_attempt); // Use getline to handle potential spaces in IDs if format changes
+        std::getline(std::cin, id_attempt);
 
         if (id_attempt == "exit")
         {
@@ -66,7 +87,6 @@ void Election::conductElection(std::vector<Voter *> &allVoters)
             break;
         }
 
-        // Find voter using the map
         auto map_iter = voterMap.find(id_attempt);
         if (map_iter == voterMap.end())
         {
@@ -74,7 +94,7 @@ void Election::conductElection(std::vector<Voter *> &allVoters)
             continue;
         }
 
-        Voter *currentVoter = map_iter->second; // Get the pointer to the voter object
+        Voter *currentVoter = map_iter->second;
 
         std::cout << "Enter Private PIN for Voter ID " << id_attempt << ": ";
         std::getline(std::cin, pin_attempt);
@@ -85,19 +105,17 @@ void Election::conductElection(std::vector<Voter *> &allVoters)
             continue;
         }
 
-        // Optional: Re-verify assembly if needed (can be strict)
-        std::cout << "Enter Your Assembly Constituency: ";
-        std::getline(std::cin, voterAssembly_attempt);
+        // std::cout << "Enter Your Assembly Constituency: ";
+        // std::getline(std::cin, voterAssembly_attempt);
 
-        if (voterAssembly_attempt != currentVoter->getAssembly())
-        {
-            std::cout << "Error: Entered assembly '" << voterAssembly_attempt
-                      << "' does not match the registered assembly '" << currentVoter->getAssembly()
-                      << "' for this voter.\n";
-            continue;
-        }
+        // if (voterAssembly_attempt != currentVoter->getAssembly())
+        // {
+        //     std::cout << "Error: Entered assembly '" << voterAssembly_attempt
+        //               << "' does not match the registered assembly '" << currentVoter->getAssembly()
+        //               << "' for this voter.\n";
+        //     continue;
+        // }
 
-        // Check eligibility and voting status again (belt-and-suspenders)
         if (!currentVoter->isEligible())
         {
             std::cout << "Error: Voter " << currentVoter->getName() << " is not eligible to vote (based on age criteria).\n";
@@ -109,15 +127,14 @@ void Election::conductElection(std::vector<Voter *> &allVoters)
             continue;
         }
 
-        // --- Display Candidates for Voter's Assembly ---
         std::cout << "\nWelcome, " << currentVoter->getName() << "!\n";
         std::cout << "Candidates for your assembly (" << currentVoter->getAssembly() << "):\n";
 
-        std::vector<Candidate *> eligibleCandidates; // Candidates matching voter's assembly
+        std::vector<Candidate *> eligibleCandidates;
         int displayIndex = 1;
-        for (Candidate *c : candidatesInElection) // Iterate through candidates added to *this* election
+        for (Candidate *c : candidatesInElection)
         {
-            if (c && c->getAssembly() == currentVoter->getAssembly()) // Check assembly match
+            if (c && c->getAssembly() == currentVoter->getAssembly())
             {
                 eligibleCandidates.push_back(c);
                 std::cout << "  " << displayIndex++ << ". " << c->getCandidateName()
@@ -128,36 +145,48 @@ void Election::conductElection(std::vector<Voter *> &allVoters)
         if (eligibleCandidates.empty())
         {
             std::cout << "No candidates found registered for your assembly (" << currentVoter->getAssembly() << ") in this election.\n";
-            // Decide action: skip voter or allow 'NOTA' (None Of The Above) if implemented
-            continue; // Skip this voter for now
+            continue;
         }
 
-        // --- Cast Vote ---
         int choice = 0;
         std::cout << "Enter the number corresponding to your chosen candidate: ";
 
-        // Input validation for choice
         while (!(std::cin >> choice) || choice < 1 || choice > eligibleCandidates.size())
         {
             std::cout << "Invalid choice. Please enter a number between 1 and " << eligibleCandidates.size() << ": ";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Consume newline
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-        // Record the vote
         Candidate *chosenCandidate = eligibleCandidates[choice - 1];
-        chosenCandidate->vote();  // Increment candidate's vote count
-        currentVoter->castVote(); // Mark the voter as having voted (updates the object in the main list via pointer)
-
-        // Removed voterToCandidate mapping logic
+        chosenCandidate->vote();
+        currentVoter->castVote(); // Mark voter as voted
 
         std::cout << "Vote cast successfully for " << chosenCandidate->getCandidateName() << ".\n";
         std::cout << "Thank you for voting, " << currentVoter->getName() << "!\n";
 
+        // --- Calculate and Display Turnout Percentage ---
+        votesCastThisSession++;
+        if (totalEligibleVoters > 0)
+        {
+            double percentage = (static_cast<double>(votesCastThisSession) / totalEligibleVoters) * 100.0;
+            std::cout << std::fixed << std::setprecision(1); // Format to 1 decimal place
+            std::cout << "--> Turnout update: " << votesCastThisSession << " / "
+                      << totalEligibleVoters << " eligible voters have voted ("
+                      << percentage << "%).\n";
+        }
+        else
+        {
+            std::cout << "--> Turnout update: " << votesCastThisSession
+                      << " vote(s) cast, but 0 eligible voters were found for this election.\n";
+        }
+        // --- ---
+
     } // End of while(true) voting loop
 }
 
+// displayResults function remains the same as before...
 void Election::displayResults()
 {
     std::cout << "\n--- Election Results (" << this->electionType << " - " << this->date << ", Poll ID: " << this->pollID << ") ---\n";
@@ -253,5 +282,3 @@ void Election::displayResults()
     }
     std::cout << "---------------------------\n";
 }
-
-// Removed displayVoterToCandidateMapping() implementation
