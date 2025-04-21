@@ -1,4 +1,3 @@
-//
 #include "AdminCLI.h"
 
 int main()
@@ -8,8 +7,10 @@ int main()
     return 0;
 }
 
-// To compile :
-// g++ main.cpp AdminCLI.cpp Voter.cpp Candidate.cpp ElectionCommission.cpp Election.cpp PartyName.cpp -o votingSystem
+// To compile 
+
+// g++ main.cpp AdminCLI.cpp Voter.cpp Candidate.cpp ElectionCommission.cpp Election.cpp Party.cpp -o votingSystem -std=c++11
 
 // To run :
+
 // ./votingSystem

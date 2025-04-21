@@ -2,18 +2,19 @@
 #ifndef ADMINCLI_H
 #define ADMINCLI_H
 
-#include "ElectionCommission.h"
-#include <string>
-#include <vector> // Include for vector used in generateUniquePin declaration if moved here
+#include "ElectionCommission.h" // Includes Party.h via ElectionCommission.h
+#include <bits/stdc++.h>
+using namespace std;
 
 class AdminCLI
 {
 private:
-    VoterVerification voterVerifier;
+    VoterVerification voterVerifier; // Manages voters and parties/candidates
     ElectionOrganizers organizers;
 
-    // --- Helper for PIN Generation ---
-    std::string generateUniquePin(const std::vector<Voter *> &existingVoters);
+    // --- Helper ---
+    string generateUniquePin(const vector<Voter *> &existingVoters);
+    Party *ensureIndependentPartyExists(); // Helper to get/create Independent party
 
     // --- Admin Flow ---
     bool login();
@@ -22,17 +23,20 @@ private:
     // --- Data Management ---
     void registerVoter();
     void deleteVoter();
-    void registerCandidate();
-    void deleteCandidate();
-    void loadAllData();
-    void saveAllData();
-    void resetSystem();
+    void registerParty();     
+    void registerCandidate(); 
+    void deleteCandidate();   
+    void loadAllData();       
+    void saveAllData();       
+    void resetSystem();       
 
     // --- Reporting ---
+    void listVoters();               
+    void listPartiesAndCandidates(); 
     void listAlreadyVoted();
 
     // --- Security ---
-    std::string resetPassword = "admin_reset_pass"; // Password for system reset
+    string resetPassword = "admin_reset_pass";
 
 public:
     void run();

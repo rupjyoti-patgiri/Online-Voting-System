@@ -1,0 +1,7 @@
+PARTY|300|BJP|Lotus
+CANDIDATE|202|jONAS|46|BA|Tihu
+PARTY|301|Congress|Hand
+PARTY|302|AAP|Jaadu
+INDEPENDENT|IND|Independent|N/A
+CANDIDATE|200|Rupjyoti Patgiri|25|btech|Guwahati
+CANDIDATE|201|Pritam Kalita|45|BSC|Guwahati

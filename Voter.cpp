@@ -1,13 +1,14 @@
 // Voter.cpp
 #include "Voter.h"
+#include <bits/stdc++.h>
 
-Voter::Voter(string name, int age, string id, string pin, string assembly)
-    : privatePin(pin), assembly(assembly)
+using namespace std;
+
+Voter::Voter(string name_val, int age_val, string id_val, string pin_val, string assembly_val, bool initialVoteStatus)
+    : name(name_val), age(age_val), voterID(id_val), privatePin(pin_val),
+      hasVoted(initialVoteStatus), assembly(assembly_val)
 {
-    this->name = name;
-    this->age = age;
-    this->voterID = id;
-    this->hasVoted = false;
+    // Constructor body
 }
 
 bool Voter::isEligible() const

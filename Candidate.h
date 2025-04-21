@@ -2,30 +2,38 @@
 #ifndef CANDIDATE_H
 #define CANDIDATE_H
 
-#include "PartyName.h"
-#include <string>
+#include <bits/stdc++.h>
+using namespace std;
 
-class Candidate : public PartyName
+
+class Candidate
 {
 private:
-    std::string candidateName;
+    string candidateName;
     int age;
-    std::string qualification;
+    string qualification;
+    string partyName; 
     int voteCount;
-    std::string candidateID; // Changed to string
-    std::string assembly;
+    string candidateID; 
+    string assembly;
 
 public:
-    Candidate(std::string name, int age, std::string qual, std::string party, std::string id, std::string assembly = ""); // Updated constructor
+        Candidate(string name, int age, string qual, string party, string id, string assembly = "");
+
+    // Eligibility and Voting methods
     bool isEligible() const;
     void vote();
     int getVotes() const;
-    std::string getCandidateName() const;
-    std::string getParty() const;
-    std::string getQualification() const;
+
+    // Getters for candidate details
+    string getCandidateName() const;
+    string getParty() const; 
+    string getQualification() const;
     int getAge() const;
-    std::string getCandidateID() const; // Updated getter
-    std::string getAssembly() const;
+    string getCandidateID() const;
+    string getAssembly() const;
+
+    
 };
 
-#endif
+#endif // CANDIDATE_H

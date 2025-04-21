@@ -1,14 +1,13 @@
 // Candidate.cpp
 #include "Candidate.h"
+#include <bits/stdc++.h>
+using namespace std;
 
-Candidate::Candidate(string name, int age, string qual, string party, string id, string assembly)
-    : candidateID(id), assembly(assembly)
+Candidate::Candidate(string name, int age, string qual, string party, string id, string assembly_val)
+    : candidateName(name), age(age), qualification(qual), partyName(party),
+      candidateID(id), assembly(assembly_val), voteCount(0)
 {
-    candidateName = name;
-    this->age = age;
-    qualification = qual;
-    partyName = party;
-    voteCount = 0;
+    
 }
 
 bool Candidate::isEligible() const
@@ -46,7 +45,7 @@ int Candidate::getAge() const
     return age;
 }
 
-string Candidate::getCandidateID() const // Updated getter
+string Candidate::getCandidateID() const
 {
     return candidateID;
 }
@@ -55,3 +54,8 @@ string Candidate::getAssembly() const
 {
     return assembly;
 }
+
+// Optional Setter implementation if added to header
+// void Candidate::setPartyName(const string& pName) {
+//     this->partyName = pName;
+// }
